@@ -27,7 +27,8 @@ class qa_normalize_flow(gr_unittest.TestCase):
 
     def test_instance(self):
         # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = normalize_flow()
+        instance = normalize_flow(0.0, 255.0, 64, 0.1, 1.0)
+        self.assertGreaterEqual(instance.output_multiple(), 1)
 
     def test_001_descriptive_test_name(self):
         # set up fg

@@ -27,7 +27,8 @@ class qa_ssamp_correction(gr_unittest.TestCase):
 
     def test_instance(self):
         # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = ssamp_correction()
+        instance = ssamp_correction(64, 16, 1, 0.05)
+        self.assertGreaterEqual(instance.output_multiple(), 1)
 
     def test_001_descriptive_test_name(self):
         # set up fg

@@ -9,12 +9,16 @@
 ########################################################################
 # Project setup
 ########################################################################
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 project(gr-tempest CXX C)
 enable_testing()
+include(GNUInstallDirs)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(ENABLE_PYTHON "Build Python bindings and GRC definitions" ON)
 
 # Install to PyBOMBS target prefix if defined
-if(DEFINED ENV{PYBOMBS_PREFIX})
+if(DEFINED ENV{PYBOMBS_PREFIX} AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX $ENV{PYBOMBS_PREFIX})
     message(STATUS "PyBOMBS installed GNU Radio. Setting CMAKE_INSTALL_PREFIX to $ENV{PYBOMBS_PREFIX}")
 endif()
@@ -28,8 +32,26 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "")
 
 # Make sure our local CMake Modules path comes first
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake/Modules)
+# GNU Radio 3.10 still uses the legacy interpreter variable in GrPython.
+if(DEFINED Python3_EXECUTABLE)
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}" CACHE FILEPATH "GNU Radio Python interpreter" FORCE)
+endif()
 # Find gnuradio to get access to the cmake modules
-find_package(Gnuradio "3.10" REQUIRED COMPONENTS blocks fft filter volk)
+find_package(Gnuradio "3.10" REQUIRED COMPONENTS runtime blocks fft filter)
+find_package(Volk REQUIRED)
+
+if(ENABLE_PYTHON)
+    include(GrPython)
+    execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c
+        "from gnuradio import gr; import numpy; assert gr.version().startswith('3.10.'), gr.version()"
+        RESULT_VARIABLE TEMPEST_PYTHON_CHECK ERROR_VARIABLE TEMPEST_PYTHON_ERROR)
+    if(NOT TEMPEST_PYTHON_CHECK EQUAL 0)
+        message(FATAL_ERROR "Selected Python must import GNU Radio 3.10 and NumPy. Use the interpreter matching GNU Radio: ${TEMPEST_PYTHON_ERROR}")
+    endif()
+    if(IS_ABSOLUTE "${GR_PYTHON_DIR}" OR GR_PYTHON_DIR MATCHES "^\\.\\.")
+        message(FATAL_ERROR "GR_PYTHON_DIR must be relative to the installation prefix")
+    endif()
+endif()
 
 # Set the version information here
 set(VERSION_MAJOR 1)
@@ -60,6 +82,7 @@ include(GrCompilerSettings)
 include(GrVersion)
 
 include(GrPlatform) #define LIB_SUFFIX
+set(GR_LIBRARY_DIR "${CMAKE_INSTALL_LIBDIR}")
 
 if(NOT CMAKE_MODULES_DIR)
   set(CMAKE_MODULES_DIR lib${LIB_SUFFIX}/cmake)
@@ -138,14 +161,11 @@ endif(ENABLE_PYTHON)
 # Install cmake search helper for this library
 ########################################################################
 
-install(FILES cmake/Modules/gnuradio-tempestConfig.cmake
-    DESTINATION ${GR_CMAKE_DIR}
-)
-
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-    ${PROJECT_SOURCE_DIR}/cmake/Modules/targetConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/Modules/${target}Config.cmake
-    INSTALL_DESTINATION ${GR_CMAKE_DIR}
-)
+if(ENABLE_PYTHON)
+    file(WRITE "${CMAKE_BINARY_DIR}/build-info.json"
+        "{\"python_relative_dir\":\"${GR_PYTHON_DIR}\",\"library_relative_dir\":\"${GR_LIBRARY_DIR}\",\"python_version\":\"${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}\"}\n")
+    install(FILES "${CMAKE_BINARY_DIR}/build-info.json" DESTINATION share/gr-tempest)
+    install(FILES tests/pythonpath_control/sitecustomize.py DESTINATION share/gr-tempest/pythonpath_control)
+    install(PROGRAMS scripts/tempest_env.py DESTINATION bin RENAME gr-tempest-env)
+endif()
 
