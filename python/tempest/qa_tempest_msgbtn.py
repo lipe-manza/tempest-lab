@@ -6,6 +6,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+from PyQt5 import Qt
 from gnuradio import gr, gr_unittest
 # from gnuradio import blocks
 from gnuradio.tempest import tempest_msgbtn
@@ -13,6 +16,7 @@ from gnuradio.tempest import tempest_msgbtn
 class qa_tempest_msgbtn(gr_unittest.TestCase):
 
     def setUp(self):
+        self.app = Qt.QApplication.instance() or Qt.QApplication([])
         self.tb = gr.top_block()
 
     def tearDown(self):
@@ -20,7 +24,9 @@ class qa_tempest_msgbtn(gr_unittest.TestCase):
 
     def test_instance(self):
         # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = tempest_msgbtn()
+        instance = tempest_msgbtn("Sync", "en", False, "default", "default")
+        self.assertEqual(instance.text(), "Sync")
+        instance.onBtnClicked(False)
 
     def test_001_descriptive_test_name(self):
         # set up fg

@@ -30,9 +30,22 @@ GR_PYTHON_INSTALL(
 ########################################################################
 # Handle the unit tests
 ########################################################################
-include(GrTest)
-
-set(GR_TEST_TARGET_DEPS gnuradio-tempest)
+# Pass each argument directly to CTest. GrTest's generated shell wrapper
+# splits source and build directories containing spaces.
+foreach(var IN ITEMS LD_LIBRARY_PATH PYTHONPATH)
+    if(NOT "$ENV{${var}}" STREQUAL "")
+        set(${var}_suffix ":$ENV{${var}}")
+    endif()
+endforeach()
+function(tempest_python_test name script)
+    add_test(NAME ${name} COMMAND "${CMAKE_COMMAND}" -E env
+        --unset=TEMPEST_PREFIX
+        "TEMPEST_TEST_BUILD=${CMAKE_BINARY_DIR}"
+        "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:gnuradio-tempest>${LD_LIBRARY_PATH_suffix}"
+        "PYTHONPATH=${CMAKE_SOURCE_DIR}/tests/pythonpath_control${PYTHONPATH_suffix}"
+        VOLK_GENERIC=1 GR_DONT_LOAD_PREFS=1 GR_CONF_CONTROLPORT_ON=False
+        "${PYTHON_EXECUTABLE}" "${script}")
+endfunction()
 
 # Create a package directory that tests can import. It includes everything
 # from `python/`.
@@ -41,15 +54,20 @@ add_custom_target(
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}
           ${CMAKE_BINARY_DIR}/test_modules/gnuradio/tempest/
 )
-GR_ADD_TEST(qa_fft_peak_fine_sampling_sync ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_fft_peak_fine_sampling_sync.py)
-GR_ADD_TEST(qa_fine_sampling_synchronization ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_fine_sampling_synchronization.py)
-GR_ADD_TEST(qa_frame_drop ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_drop.py)
-GR_ADD_TEST(qa_framing ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_framing.py)
-GR_ADD_TEST(qa_infer_screen_resolution ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_infer_screen_resolution.py)
-GR_ADD_TEST(qa_normalize_flow ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_normalize_flow.py)
-GR_ADD_TEST(qa_sampling_synchronization ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_sampling_synchronization.py)
-GR_ADD_TEST(qa_ssamp_correction ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_ssamp_correction.py)
-GR_ADD_TEST(qa_sync_detector ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_sync_detector.py)
-GR_ADD_TEST(qa_tempest_msgbtn ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_tempest_msgbtn.py)
-GR_ADD_TEST(qa_message_to_var ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_message_to_var.py)
-GR_ADD_TEST(qa_image_source ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/qa_image_source.py)
+add_dependencies(copy_bindings_for_tests copy_module_for_tests)
+tempest_python_test(qa_fft_peak_fine_sampling_sync "${CMAKE_CURRENT_SOURCE_DIR}/qa_fft_peak_fine_sampling_sync.py")
+tempest_python_test(qa_fine_sampling_synchronization "${CMAKE_CURRENT_SOURCE_DIR}/qa_fine_sampling_synchronization.py")
+tempest_python_test(qa_frame_drop "${CMAKE_CURRENT_SOURCE_DIR}/qa_frame_drop.py")
+tempest_python_test(qa_framing "${CMAKE_CURRENT_SOURCE_DIR}/qa_framing.py")
+tempest_python_test(qa_infer_screen_resolution "${CMAKE_CURRENT_SOURCE_DIR}/qa_infer_screen_resolution.py")
+tempest_python_test(qa_normalize_flow "${CMAKE_CURRENT_SOURCE_DIR}/qa_normalize_flow.py")
+tempest_python_test(qa_sampling_synchronization "${CMAKE_CURRENT_SOURCE_DIR}/qa_sampling_synchronization.py")
+tempest_python_test(qa_ssamp_correction "${CMAKE_CURRENT_SOURCE_DIR}/qa_ssamp_correction.py")
+tempest_python_test(qa_sync_detector "${CMAKE_CURRENT_SOURCE_DIR}/qa_sync_detector.py")
+tempest_python_test(qa_tempest_msgbtn "${CMAKE_CURRENT_SOURCE_DIR}/qa_tempest_msgbtn.py")
+set_tests_properties(qa_tempest_msgbtn PROPERTIES
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
+)
+tempest_python_test(qa_message_to_var "${CMAKE_CURRENT_SOURCE_DIR}/qa_message_to_var.py")
+tempest_python_test(qa_image_source "${CMAKE_CURRENT_SOURCE_DIR}/qa_image_source.py")
+tempest_python_test(qa_module_provenance "${CMAKE_SOURCE_DIR}/tests/qa_module_provenance.py")
