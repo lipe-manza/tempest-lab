@@ -7,11 +7,11 @@ From the repository root on a host with GNU Radio 3.10 development files, its ma
 ```sh
 cmake -S . -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$PWD/local" -DPython3_EXECUTABLE="$(command -v python3)"
 cmake --build build/native --parallel 2
-ctest --test-dir build/native -R '^qa_(module_provenance|tempest_msgbtn|message_to_var|image_source)$' --output-on-failure
+ctest --test-dir build/native --output-on-failure
 cmake --install build/native
 python3 scripts/tempest_env.py --prefix "$PWD/local" -- python3 -c 'from gnuradio import tempest; print(tempest.__file__)'
 ```
 
-The provenance test checks the selected Python package and mapped C++ library. A conflicting native library must cause a startup error. Use a fresh build directory when changing interpreters. Retain the test output and Git revision in bug reports.
+The suite includes nine constructor smoke tests with the public arguments supplied. They exercise construction only. The provenance test checks the selected Python package and mapped C++ library. A conflicting native library must cause a startup error. Use a fresh build directory when changing interpreters. Retain the test output and Git revision in bug reports.
 
 Qualification of this revision excludes other operating systems, RF hardware, and end-to-end reconstruction. The original research programs remain in the base history. This review does not qualify their use.
