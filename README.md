@@ -1,4 +1,10 @@
-### gr-tempest
+# TEMPEST Lab
+
+TEMPEST Lab is an independent research project maintained by lipe-manza and derived from gr-tempest. The GNU Radio module retains the name `tempest`.
+
+This branch contains the reviewed build, installation and unit-test changes. Start with the [build and QA guide](docs/BUILD_QA.md), [review record](docs/ENGINEERING_REVIEW.md) and [contribution guide](CONTRIBUTING.md). The [license](COPYING) and upstream attribution apply. The original project description below records the upstream authors’ work. Its hardware results belong to that project.
+
+## Original gr-tempest project
 
 **An implementation of TEMPEST en GNU Radio.** 
 
