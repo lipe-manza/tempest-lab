@@ -27,7 +27,8 @@ class qa_fine_sampling_synchronization(gr_unittest.TestCase):
 
     def test_instance(self):
         # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = fine_sampling_synchronization()
+        instance = fine_sampling_synchronization(64, 16, 0, 0.05, 0.1)
+        self.assertGreaterEqual(instance.output_multiple(), 1)
 
     def test_001_descriptive_test_name(self):
         # set up fg

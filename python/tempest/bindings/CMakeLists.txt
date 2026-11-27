@@ -48,8 +48,15 @@ GR_PYBIND_MAKE_OOT(tempest
 add_custom_target(
   copy_bindings_for_tests ALL
   COMMAND
-    ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/*.so"
+    ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/test_modules/gnuradio/tempest/
+  COMMAND
+    ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:tempest_python>"
     ${CMAKE_BINARY_DIR}/test_modules/gnuradio/tempest/
   DEPENDS tempest_python)
+
+file(RELATIVE_PATH TEMPEST_BINDING_LIBRARY_PATH
+    "/${GR_PYTHON_DIR}/gnuradio/tempest" "/${GR_LIBRARY_DIR}")
+set_target_properties(tempest_python PROPERTIES
+    INSTALL_RPATH "\$ORIGIN/${TEMPEST_BINDING_LIBRARY_PATH}")
 
 install(TARGETS tempest_python DESTINATION ${GR_PYTHON_DIR}/gnuradio/tempest COMPONENT pythonapi)

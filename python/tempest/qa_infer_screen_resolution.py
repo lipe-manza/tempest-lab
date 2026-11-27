@@ -27,7 +27,8 @@ class qa_infer_screen_resolution(gr_unittest.TestCase):
 
     def test_instance(self):
         # FIXME: Test will fail until you pass sensible arguments to the constructor
-        instance = infer_screen_resolution()
+        instance = infer_screen_resolution(50000, 4096, 60.0, False)
+        self.assertGreaterEqual(instance.output_multiple(), 1)
 
     def test_001_descriptive_test_name(self):
         # set up fg

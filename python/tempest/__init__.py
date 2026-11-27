@@ -13,11 +13,7 @@ description here (python/__init__.py).
 import os
 
 # import pybind11 generated symbols into the tempest namespace
-try:
-    # this might fail if the module is python-only
-    from .tempest_python import *
-except ModuleNotFoundError:
-    pass
+from .tempest_python import *
 
 # import any pure python here
 from .tempest_msgbtn import tempest_msgbtn
